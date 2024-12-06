@@ -62,4 +62,4 @@ addopts = [
 ]
 
 [tool.coverage.run]
-omit = ["tests/*", "__init__.py"]
+omit = ["tests/*", "__init__.py", "pysaal/lib/*", "docs/*"]
