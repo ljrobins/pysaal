@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class TLEClassification(Enum):
+class Classification(Enum):
     NONE = " "
     UNCLASSIFIED = "U"
     CONFIDENTIAL = "C"

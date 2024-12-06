@@ -5,7 +5,11 @@ from pysaal.elements._classical_elements import ClassicalElements
 from pysaal.elements._equinoctial_elements import EquinoctialElements
 from pysaal.elements._keplerian_elements import KeplerianElements
 from pysaal.elements._mean_elements import MeanElements
+from pysaal.elements._sp_vector import SPVector
+from pysaal.elements._tle import TLE
+from pysaal.enums import TLEType
 from pysaal.lib import DLLs
+from pysaal.math.constants import B_STAR_TO_B_TERM_COEFFICIENT
 
 
 class _GetEquinoctial:
@@ -94,6 +98,23 @@ class _GetMeanMotion:
         return DLLs.astro_func.AToN(c_double(a))
 
 
+class _GetTLE:
+    @staticmethod
+    def from_sp_vector(sp: SPVector, tle_type: TLEType) -> TLE:
+        xa_tle, xs_tle = TLE.get_null_pointers()
+        tle = TLE.from_c_arrays(xa_tle, xs_tle)
+        tle.satellite_id = sp.satellite_id
+        tle.epoch = sp.epoch
+        tle.ephemeris_type = tle_type
+        tle.ballistic_coefficient = sp.b_term
+        tle.b_star = sp.b_term / B_STAR_TO_B_TERM_COEFFICIENT
+        tle.agom = sp.agom
+        tle.designator = sp.designator
+        tle.classification = sp.classification
+        DLLs.sgp4_prop.Sgp4PosVelToTleArr(sp.position.c_array, sp.velocity.c_array, tle.c_double_array)
+        return tle
+
+
 class ConvertElements:
     equinoctial = _GetEquinoctial
     keplerian = _GetKeplerian
@@ -101,3 +122,4 @@ class ConvertElements:
     classical = _GetClassical
     mean = _GetMean
     mean_motion = _GetMeanMotion
+    tle = _GetTLE

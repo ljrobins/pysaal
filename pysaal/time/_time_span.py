@@ -1,3 +1,4 @@
+from pysaal.math.constants import DAYS_TO_MINUTES
 from pysaal.time._epoch import Epoch
 
 
@@ -8,8 +9,10 @@ class TimeSpan:
 
     @property
     def days(self) -> float:
-        """Return the time span in days.
-
-        :return: Time span in days
-        """
+        """Return the time span in days."""
         return self.end.utc_ds50 - self.start.utc_ds50
+
+    @property
+    def minutes(self) -> float:
+        """Return the time span in minutes."""
+        return self.days * DAYS_TO_MINUTES

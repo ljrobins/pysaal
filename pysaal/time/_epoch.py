@@ -8,6 +8,12 @@ class Epoch:
     def __init__(self, epoch: float):
         self.utc_ds50 = epoch
 
+    def __add__(self, other: float) -> "Epoch":
+        return Epoch(self.utc_ds50 + other)
+
+    def __sub__(self, other: float) -> "Epoch":
+        return Epoch(self.utc_ds50 - other)
+
     @property
     def greenwich_angle(self) -> float:
         """Return the Greenwich angle in radians using the FK theory loaded to the environment constants."""

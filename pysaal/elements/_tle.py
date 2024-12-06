@@ -1,6 +1,10 @@
-from ctypes import Array, c_char, c_double
+from ctypes import Array, c_char, c_double, c_int
+from pathlib import Path
 
-from pysaal.enums import PySAALErrorCode, TLEClassification, TLEType
+from pysaal.elements._cartesian_elements import CartesianElements
+from pysaal.elements._ephemeris import Ephemeris
+from pysaal.elements._lla import LLA
+from pysaal.enums import Classification, PySAALErrorCode, TLEType
 from pysaal.exceptions import PySAALError
 from pysaal.lib import DLLs
 from pysaal.lib._tle import (
@@ -29,7 +33,7 @@ from pysaal.lib._tle import (
     XS_TLE_SIZE,
 )
 from pysaal.math.constants import B_STAR_TO_B_TERM_COEFFICIENT
-from pysaal.time import Epoch
+from pysaal.time import Epoch, TimeSpan
 
 
 class TLE:
@@ -45,6 +49,17 @@ class TLE:
         self.key = None
         self.name = self.designator
 
+    @classmethod
+    def from_c_arrays(cls, c_double_array: Array[c_double], c_char_array: Array[c_char]) -> "TLE":
+        line_1 = (c_char * XS_TLE_SIZE)()
+        line_2 = (c_char * XS_TLE_SIZE)()
+        DLLs.tle.TleGPArrayToLines(c_double_array, c_char_array, line_1, line_2)
+        return cls(line_1.value.decode().strip(), line_2.value.decode().strip())
+
+    @staticmethod
+    def write_loaded_tles_to_file(file_path: Path) -> None:
+        DLLs.tle.TleSaveFile(file_path.as_posix().encode(), 0, 0)
+
     @staticmethod
     def get_null_pointers() -> tuple[Array[c_double], Array[c_char]]:
         xa_tle = (c_double * XA_TLE_SIZE)()
@@ -59,9 +74,15 @@ class TLE:
         if self.loaded and self.key is not None:
             DLLs.tle.TleUpdateSatFrArray(self.key, self.c_double_array, self.c_char_array)
 
+    def get_range_at_epoch(self, epoch: Epoch, other: "TLE") -> float:
+        teme_pri, _ = self.get_state_at_epoch(epoch)
+        teme_sec, _ = other.get_state_at_epoch(epoch)
+        return (teme_pri.position - teme_sec.position).magnitude
+
     def destroy(self) -> None:
         if self.loaded and self.key is not None:
             DLLs.tle.TleRemoveSat(self.key)
+            DLLs.sgp4_prop.Sgp4RemoveSat(self.key)
             self.key = None
             self.loaded = False
 
@@ -69,15 +90,39 @@ class TLE:
         key = DLLs.tle.TleAddSatFrArray(self.c_double_array, self.c_char_array)
         if key in PySAALErrorCode:
             raise PySAALError(PySAALErrorCode(key))
+        status = DLLs.sgp4_prop.Sgp4InitSat(key)
+        if status != PySAALError.SUCCESS_CODE:
+            raise PySAALError(PySAALErrorCode(status))
         self.key = key
         self.loaded = True
 
+    def get_state_at_epoch(self, epoch: Epoch) -> tuple[CartesianElements, LLA]:
+        if not self.loaded:
+            self.load()
+        pos, vel = CartesianElements.get_null_pointers()
+        llh = LLA.get_null_pointer()
+        DLLs.sgp4_prop.Sgp4PropDs50UTC(self.key, epoch.utc_ds50, c_double(), pos, vel, llh)
+        return CartesianElements.from_c_arrays(pos, vel), LLA.from_c_array(llh)
+
+    def get_ephemeris(self, start: Epoch, end: Epoch, step: int) -> Ephemeris:
+        xa_tle = self.c_double_array
+        c_start = c_double(start.utc_ds50)
+        c_end = c_double(end.utc_ds50)
+        c_step = c_double(step)
+        num_pts = int(TimeSpan(start, end).minutes / step) + 1
+        ephem_arr = Ephemeris.null_pointer(num_pts)
+        num_generated = c_int()
+        status = DLLs.sgp4_prop.Sgp4GenEphems_OS(xa_tle, c_start, c_end, c_step, 1, num_pts, ephem_arr, num_generated)
+        if status != PySAALError.SUCCESS_CODE:
+            raise PySAALError(PySAALErrorCode(status))
+        return Ephemeris(ephem_arr)
+
     @property
-    def classification(self) -> TLEClassification:
-        return TLEClassification(self.c_char_array.value.decode()[XS_TLE_SECCLASS_0_1])
+    def classification(self) -> Classification:
+        return Classification(self.c_char_array.value.decode()[XS_TLE_SECCLASS_0_1])
 
     @classification.setter
-    def classification(self, value: TLEClassification):
+    def classification(self, value: Classification):
         self.c_char_array[XS_TLE_SECCLASS_0_1] = value.value.encode()
         self.update()
 
@@ -133,60 +178,131 @@ class TLE:
         self.update()
 
     @property
-    def ndot(self) -> float:
+    def n_dot(self) -> float:
         """Mean motion derivative (rev/day /2)"""
         return self.c_double_array[XA_TLE_NDOT]
 
+    @n_dot.setter
+    def n_dot(self, value: float):
+        self.c_double_array[XA_TLE_NDOT] = value
+        self.update()
+
     @property
-    def ndotdot(self) -> float:
+    def n_dot_dot(self) -> float:
         """Mean motion second derivative (rev/day**2 /6)"""
         return self.c_double_array[XA_TLE_NDOTDOT]
+
+    @n_dot_dot.setter
+    def n_dot_dot(self, value: float):
+        self.c_double_array[XA_TLE_NDOTDOT] = value
+        self.update()
 
     @property
     def b_star(self) -> float:
         """B* drag term (1/er)"""
-        return self.c_double_array[XA_TLE_BSTAR]
+        if self.ephemeris_type == TLEType.SGP or self.ephemeris_type == TLEType.SGP4:
+            b_star = self.c_double_array[XA_TLE_BSTAR]
+        elif self.ephemeris_type == TLEType.SP:
+            b_star = self.c_double_array[XA_TLE_SP_BTERM] / B_STAR_TO_B_TERM_COEFFICIENT
+        elif self.ephemeris_type == TLEType.XP:
+            b_star = self.c_double_array[XA_TLE_BTERM] / B_STAR_TO_B_TERM_COEFFICIENT
+        return b_star
+
+    @b_star.setter
+    def b_star(self, value: float):
+        if self.ephemeris_type == TLEType.SGP or self.ephemeris_type == TLEType.SGP4:
+            self.c_double_array[XA_TLE_BSTAR] = value
+        elif self.ephemeris_type == TLEType.SP:
+            self.c_double_array[XA_TLE_SP_BTERM] = value * B_STAR_TO_B_TERM_COEFFICIENT
+        elif self.ephemeris_type == TLEType.XP:
+            self.c_double_array[XA_TLE_BTERM] = value * B_STAR_TO_B_TERM_COEFFICIENT
+        self.update()
 
     @property
     def ephemeris_type(self) -> TLEType:
         return TLEType(self.c_double_array[XA_TLE_EPHTYPE])
+
+    @ephemeris_type.setter
+    def ephemeris_type(self, value: TLEType):
+        self.c_double_array[XA_TLE_EPHTYPE] = value.value
+        self.update()
 
     @property
     def inclination(self) -> float:
         """Orbit inclination (deg)"""
         return self.c_double_array[XA_TLE_INCLI]
 
+    @inclination.setter
+    def inclination(self, value: float):
+        self.c_double_array[XA_TLE_INCLI] = value
+        self.update()
+
     @property
     def raan(self) -> float:
         """Right ascension of ascending node (deg)"""
         return self.c_double_array[XA_TLE_NODE]
 
+    @raan.setter
+    def raan(self, value: float):
+        self.c_double_array[XA_TLE_NODE] = value
+        self.update()
+
     @property
     def eccentricity(self) -> float:
         return self.c_double_array[XA_TLE_ECCEN]
+
+    @eccentricity.setter
+    def eccentricity(self, value: float):
+        self.c_double_array[XA_TLE_ECCEN] = value
+        self.update()
 
     @property
     def argument_of_perigee(self) -> float:
         """Argument of perigee (deg)"""
         return self.c_double_array[XA_TLE_OMEGA]
 
+    @argument_of_perigee.setter
+    def argument_of_perigee(self, value: float):
+        self.c_double_array[XA_TLE_OMEGA] = value
+        self.update()
+
     @property
     def mean_anomaly(self) -> float:
         """Mean anomaly (deg)"""
         return self.c_double_array[XA_TLE_MNANOM]
+
+    @mean_anomaly.setter
+    def mean_anomaly(self, value: float):
+        self.c_double_array[XA_TLE_MNANOM] = value
+        self.update()
 
     @property
     def mean_motion(self) -> float:
         """Mean motion (rev/day)"""
         return self.c_double_array[XA_TLE_MNMOTN]
 
+    @mean_motion.setter
+    def mean_motion(self, value: float):
+        self.c_double_array[XA_TLE_MNMOTN] = value
+        self.update()
+
     @property
     def revolution_number(self) -> int:
         return int(self.c_double_array[XA_TLE_REVNUM])
 
+    @revolution_number.setter
+    def revolution_number(self, value: int):
+        self.c_double_array[XA_TLE_REVNUM] = value
+        self.update()
+
     @property
     def element_set_number(self) -> int:
         return int(self.c_double_array[XA_TLE_ELSETNUM])
+
+    @element_set_number.setter
+    def element_set_number(self, value: int):
+        self.c_double_array[XA_TLE_ELSETNUM] = value
+        self.update()
 
     @property
     def ballistic_coefficient(self) -> float:
@@ -199,6 +315,16 @@ class TLE:
             bc = B_STAR_TO_B_TERM_COEFFICIENT * self.c_double_array[XA_TLE_BSTAR]
         return bc
 
+    @ballistic_coefficient.setter
+    def ballistic_coefficient(self, value: float):
+        if self.ephemeris_type == TLEType.SP:
+            self.c_double_array[XA_TLE_SP_BTERM] = value
+        elif self.ephemeris_type == TLEType.XP:
+            self.c_double_array[XA_TLE_BTERM] = value
+        else:
+            self.c_double_array[XA_TLE_BSTAR] = value / B_STAR_TO_B_TERM_COEFFICIENT
+        self.update()
+
     @property
     def agom(self) -> float:
         """Solar radiation pressure (m2/kg)"""
@@ -210,6 +336,14 @@ class TLE:
             agom = 0.0
         return agom
 
+    @agom.setter
+    def agom(self, value: float):
+        if self.ephemeris_type == TLEType.SP:
+            self.c_double_array[XA_TLE_SP_AGOM] = value
+        elif self.ephemeris_type == TLEType.XP:
+            self.c_double_array[XA_TLE_AGOMGP] = value
+        self.update()
+
     @property
     def outgassing_parameter(self) -> float:
         """Outgassing parameter (km/s2)"""
@@ -218,3 +352,9 @@ class TLE:
         else:
             ogparm = 0.0
         return ogparm
+
+    @outgassing_parameter.setter
+    def outgassing_parameter(self, value: float):
+        if self.ephemeris_type == TLEType.SP:
+            self.c_double_array[XA_TLE_SP_OGPARM] = value
+        self.update()

@@ -7,8 +7,9 @@ from pysaal.elements import (
     EquinoctialElements,
     KeplerianElements,
     MeanElements,
+    SPVector,
 )
-from pysaal.enums import TLEClassification, TLEType
+from pysaal.enums import Classification, TLEType
 
 
 @pytest.fixture
@@ -28,12 +29,12 @@ def expected_line_2():
 
 @pytest.fixture
 def expected_classification():
-    return TLEClassification("U")
+    return Classification("U")
 
 
 @pytest.fixture
 def new_classification():
-    return TLEClassification("C")
+    return Classification("C")
 
 
 @pytest.fixture
@@ -49,6 +50,15 @@ def expected_type():
 @pytest.fixture
 def expected_tle(expected_line_1, expected_line_2):
     return TLE(expected_line_1, expected_line_2)
+
+
+@pytest.fixture
+def expected_sp_vector(expected_tle):
+    teme, _ = expected_tle.get_state_at_epoch(expected_tle.epoch)
+    expected_tle.destroy()
+    sp = SPVector(expected_tle.epoch, teme, 1)
+    sp.b_term = expected_tle.ballistic_coefficient
+    return sp
 
 
 @pytest.fixture

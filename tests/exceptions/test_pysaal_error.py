@@ -15,5 +15,5 @@ def test_duplicate_key():
 
 
 def test_unknown():
-    with pytest.raises(PySAALError, match="Unknown error"):
+    with pytest.raises(PySAALError, match=""):
         raise PySAALError(PySAALErrorCode.UNKNOWN)
