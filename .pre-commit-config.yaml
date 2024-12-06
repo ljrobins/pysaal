@@ -4,14 +4,12 @@ repos:
   rev: v4.4.0
   hooks:
   - id: check-added-large-files
-    exclude: data
+    exclude: pysaal/lib
   - id: check-case-conflict
   - id: check-yaml
   - id: debug-statements
   - id: end-of-file-fixer
-    exclude: data
   - id: trailing-whitespace
-    exclude: data
 
 - repo: https://github.com/pycqa/isort
   rev: 5.12.0
