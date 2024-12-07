@@ -49,7 +49,7 @@ def expected_type():
 
 @pytest.fixture
 def expected_tle(expected_line_1, expected_line_2):
-    return TLE(expected_line_1, expected_line_2)
+    return TLE.from_lines(expected_line_1, expected_line_2)
 
 
 @pytest.fixture

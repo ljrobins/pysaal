@@ -41,20 +41,26 @@ class TLE:
     MAX_SATELLITE_ID = 339999
     MAX_DESIGNATOR_LENGTH = 8
 
-    def __init__(self, line_1: str, line_2: str):
+    def __init__(self):
 
         self.c_double_array, self.c_char_array = TLE.get_null_pointers()
-        DLLs.tle.TleLinesToArray(line_1.encode(), line_2.encode(), self.c_double_array, self.c_char_array)
         self.loaded = False
         self.key = None
         self.name = self.designator
+
+    @classmethod
+    def from_lines(cls, line_1: str, line_2: str) -> "TLE":
+        tle = cls()
+        DLLs.tle.TleLinesToArray(line_1.encode(), line_2.encode(), tle.c_double_array, tle.c_char_array)
+        tle.name = tle.designator
+        return tle
 
     @classmethod
     def from_c_arrays(cls, c_double_array: Array[c_double], c_char_array: Array[c_char]) -> "TLE":
         line_1 = (c_char * XS_TLE_SIZE)()
         line_2 = (c_char * XS_TLE_SIZE)()
         DLLs.tle.TleGPArrayToLines(c_double_array, c_char_array, line_1, line_2)
-        return cls(line_1.value.decode().strip(), line_2.value.decode().strip())
+        return cls.from_lines(line_1.value.decode().strip(), line_2.value.decode().strip())
 
     @staticmethod
     def write_loaded_tles_to_file(file_path: Path) -> None:

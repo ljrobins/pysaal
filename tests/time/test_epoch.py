@@ -106,6 +106,12 @@ def test_fk5_greenwich_angle():
     assert epoch.fk5_greenwich_angle == 1.7604919497334706
 
 
+def test_add():
+    epoch = Epoch(25934.0)
+    new_epoch = epoch + 1
+    assert new_epoch.utc_ds50 == 25935.0
+
+
 def test_greenwich_angle():
     epoch = Epoch(25934.0)
     assert epoch.greenwich_angle == 1.7604919497334706

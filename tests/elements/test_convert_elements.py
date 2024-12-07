@@ -2,6 +2,8 @@ import pytest
 
 from pysaal.bodies import Earth
 from pysaal.elements import ConvertElements
+from pysaal.enums import TLEType
+from pysaal.math.constants import MINUTES_IN_DAY, MINUTUES_TO_DAYS
 
 
 def test_equinoctial_from_keplerian(expected_keplerian, expected_equinoctial):
@@ -104,3 +106,15 @@ def test_kozai_from_brouwer():
 def test_mean_motion_from_semi_major_axis(expected_classical, expected_keplerian):
     mm = ConvertElements.mean_motion.from_semi_major_axis(expected_classical.semi_major_axis)
     assert mm == pytest.approx(expected_keplerian.mean_motion)
+
+
+def test_tle_from_sp_vector(expected_sp_vector, expected_tle):
+    tle = ConvertElements.tle.from_sp_vector(expected_sp_vector, TLEType.SGP4)
+    dists = []
+    for t in range(MINUTES_IN_DAY * 10):
+        dists.append(expected_tle.get_range_at_epoch(expected_tle.epoch + t * MINUTUES_TO_DAYS, tle))
+
+    tle.destroy()
+    expected_tle.destroy()
+    assert max(dists) < 5
+    assert max(dists) > 0

@@ -101,8 +101,7 @@ class _GetMeanMotion:
 class _GetTLE:
     @staticmethod
     def from_sp_vector(sp: SPVector, tle_type: TLEType) -> TLE:
-        xa_tle, xs_tle = TLE.get_null_pointers()
-        tle = TLE.from_c_arrays(xa_tle, xs_tle)
+        tle = TLE()
         tle.satellite_id = sp.satellite_id
         tle.epoch = sp.epoch
         tle.ephemeris_type = tle_type
