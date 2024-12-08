@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [{ name = "bsexton", email = "bsexton@icr-team.com" }]
-dependencies = []
+dependencies = ["numpy", "pandas"]
 
 [project.optional-dependencies]
 dev = [
@@ -17,6 +17,7 @@ dev = [
   "flake8",
   "flake8-pytest-style",
   "pysaal[test]",
+  "pandas-stubs",
 ]
 test = ["pytest", "pytest-cov", "mockito"]
 build = ["build"]

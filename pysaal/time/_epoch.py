@@ -14,6 +14,29 @@ class Epoch:
     def __sub__(self, other: float) -> "Epoch":
         return Epoch(self.utc_ds50 - other)
 
+    def __lt__(self, other: "Epoch") -> bool:
+        return self.utc_ds50 < other.utc_ds50
+
+    def __le__(self, other: "Epoch") -> bool:
+        return self.utc_ds50 <= other.utc_ds50
+
+    def __gt__(self, other: "Epoch") -> bool:
+        return self.utc_ds50 > other.utc_ds50
+
+    def __ge__(self, other: "Epoch") -> bool:
+        return self.utc_ds50 >= other.utc_ds50
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Epoch):
+            return False
+        return self.utc_ds50 == other.utc_ds50
+
+    def __ne__(self, other) -> bool:
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self.utc_ds50)
+
     @property
     def greenwich_angle(self) -> float:
         """Return the Greenwich angle in radians using the FK theory loaded to the environment constants."""

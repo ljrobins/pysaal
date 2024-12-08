@@ -20,34 +20,43 @@ def test_get_null_pointers():
 
 
 def test_update(expected_tle):
-    expected_tle.update()
+    expected_tle.load()
+    expected_tle.inclination = 42
+    state = expected_tle.get_state_at_epoch(expected_tle.epoch)
+    expected_tle.destroy()
+    assert expected_tle.inclination == 42
+    assert state.position.x == 5907.241830363182
+    assert state.position.y == -1812.0856674529778
+    assert state.position.z == 2828.6276707425336
+    assert state.velocity.x == 3.765882542507204
+    assert state.velocity.y == 4.312300334009153
+    assert state.velocity.z == -5.088378313453208
+    assert state.longitude == 270.1158920066335
+    assert state.latitude == 24.734533628750928
+    assert state.altitude == 421.19273186284363
 
 
 def test_propagate_to_epoch(expected_tle):
 
-    teme, lla = expected_tle.get_state_at_epoch(expected_tle.epoch + 1)
+    state = expected_tle.get_state_at_epoch(expected_tle.epoch + 1)
     expected_tle.destroy()
 
-    assert teme.position.x == -6000.683061334345
-    assert teme.position.y == 2024.4258851255618
-    assert teme.position.z == -2456.1499345834163
-    assert teme.velocity.x == -3.588289406024903
-    assert teme.velocity.y == -4.171760521251378
-    assert teme.velocity.z == 5.333708710662431
-    assert lla.longitude == 87.54134638131
-    assert lla.latitude == -21.32009251115934
-    assert lla.altitude == 417.25424345521776
+    assert state.position.x == -6000.683061334345
+    assert state.position.y == 2024.4258851255618
+    assert state.position.z == -2456.1499345834163
+    assert state.velocity.x == -3.588289406024903
+    assert state.velocity.y == -4.171760521251378
+    assert state.velocity.z == 5.333708710662431
+    assert state.longitude == 87.54134638131
+    assert state.latitude == -21.32009251115934
+    assert state.altitude == 417.25424345521776
 
 
-def test_get_ephemeris(expected_tle):
-    ephem = expected_tle.get_ephemeris(expected_tle.epoch, expected_tle.epoch + 1, 1)
-    assert len(ephem) == 1441
-    assert ephem[-1].position.x == -6000.683061334345
-    assert ephem[-1].position.y == 2024.4258851255618
-    assert ephem[-1].position.z == -2456.1499345834163
-    assert ephem[-1].velocity.x == -3.588289406024903
-    assert ephem[-1].velocity.y == -4.171760521251378
-    assert ephem[-1].velocity.z == 5.333708710662431
+def test_get_loaded_keys(expected_tle):
+    expected_tle.load()
+    keys = expected_tle.get_loaded_keys()
+    assert keys[0] == expected_tle.key
+    expected_tle.destroy()
 
 
 def test_classification(expected_tle, expected_classification, new_classification):
@@ -72,6 +81,12 @@ def test_designator(expected_tle, expected_name):
     assert expected_tle.designator == expected_name
     with pytest.raises(ValueError, match="Name exceeds maximum length"):
         expected_tle.designator = "".join(["A" for _ in range(TLE.MAX_DESIGNATOR_LENGTH + 1)])
+
+
+def test_from_c_arrays(expected_tle):
+    tle_2 = TLE.from_c_arrays(expected_tle.c_double_array, expected_tle.c_char_array)
+    assert tle_2.line_1 == expected_tle.line_1
+    assert tle_2.line_2 == expected_tle.line_2
 
 
 def test_get_number_in_memory():

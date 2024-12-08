@@ -1,10 +1,10 @@
-from ctypes import Array, c_char, c_double, c_int
+from ctypes import Array, c_char, c_double, c_longlong
 from pathlib import Path
 
 from pysaal.elements._cartesian_elements import CartesianElements
-from pysaal.elements._ephemeris import Ephemeris
 from pysaal.elements._lla import LLA
-from pysaal.enums import Classification, PySAALErrorCode, TLEType
+from pysaal.elements._propagated_tle import PropagatedTLE
+from pysaal.enums import Classification, PySAALKeyErrorCode, SGP4EpochType, SGP4ErrorCode, TLEType
 from pysaal.exceptions import PySAALError
 from pysaal.lib import DLLs
 from pysaal.lib._tle import (
@@ -33,7 +33,8 @@ from pysaal.lib._tle import (
     XS_TLE_SIZE,
 )
 from pysaal.math.constants import B_STAR_TO_B_TERM_COEFFICIENT
-from pysaal.time import Epoch, TimeSpan
+from pysaal.math.linalg import Vector3D
+from pysaal.time import Epoch
 
 
 class TLE:
@@ -56,6 +57,18 @@ class TLE:
         return tle
 
     @classmethod
+    def from_key(cls, key: c_longlong) -> "TLE":
+        line_1 = (c_char * XS_TLE_SIZE)()
+        line_2 = (c_char * XS_TLE_SIZE)()
+        status = DLLs.tle.TleGetLines(key, line_1, line_2)
+        if status != SGP4ErrorCode.NONE.value:
+            raise PySAALError
+        tle = cls.from_lines(line_1.value.decode().strip(), line_2.value.decode().strip())
+        tle.loaded = True
+        tle.key = key
+        return tle
+
+    @classmethod
     def from_c_arrays(cls, c_double_array: Array[c_double], c_char_array: Array[c_char]) -> "TLE":
         line_1 = (c_char * XS_TLE_SIZE)()
         line_2 = (c_char * XS_TLE_SIZE)()
@@ -73,17 +86,50 @@ class TLE:
         return xa_tle, xs_tle
 
     @staticmethod
+    def destroy_all() -> None:
+        DLLs.tle.TleRemoveAllSats()
+        DLLs.sgp4_prop.Sgp4RemoveAllSats()
+
+    @staticmethod
     def get_number_in_memory() -> int:
         return DLLs.tle.TleGetCount()
+
+    @property
+    def cartesian_elements(self) -> CartesianElements:
+        return self.get_state_at_epoch(Epoch(self.epoch.utc_ds50)).cartesian_elements
+
+    @property
+    def lla(self) -> LLA:
+        return self.get_state_at_epoch(Epoch(self.epoch.utc_ds50)).lla
+
+    @property
+    def position(self) -> Vector3D:
+        return self.cartesian_elements.position
+
+    @property
+    def velocity(self) -> Vector3D:
+        return self.cartesian_elements.velocity
+
+    @property
+    def longitude(self) -> float:
+        return self.lla.longitude
+
+    @property
+    def latitude(self) -> float:
+        return self.lla.latitude
+
+    @property
+    def altitude(self) -> float:
+        return self.lla.altitude
 
     def update(self) -> None:
         if self.loaded and self.key is not None:
             DLLs.tle.TleUpdateSatFrArray(self.key, self.c_double_array, self.c_char_array)
 
     def get_range_at_epoch(self, epoch: Epoch, other: "TLE") -> float:
-        teme_pri, _ = self.get_state_at_epoch(epoch)
-        teme_sec, _ = other.get_state_at_epoch(epoch)
-        return (teme_pri.position - teme_sec.position).magnitude
+        pri_state = self.get_state_at_epoch(epoch)
+        sec_state = other.get_state_at_epoch(epoch)
+        return (pri_state.position - sec_state.position).magnitude
 
     def destroy(self) -> None:
         if self.loaded and self.key is not None:
@@ -93,35 +139,35 @@ class TLE:
             self.loaded = False
 
     def load(self) -> None:
-        key = DLLs.tle.TleAddSatFrArray(self.c_double_array, self.c_char_array)
-        if key in PySAALErrorCode:
-            raise PySAALError(PySAALErrorCode(key))
-        status = DLLs.sgp4_prop.Sgp4InitSat(key)
-        if status != PySAALError.SUCCESS_CODE:
-            raise PySAALError(PySAALErrorCode(status))
-        self.key = key
-        self.loaded = True
+        if not self.loaded:
+            key = DLLs.tle.TleAddSatFrArray(self.c_double_array, self.c_char_array)
+            if key in PySAALKeyErrorCode:
+                raise PySAALError
+            status = DLLs.sgp4_prop.Sgp4InitSat(key)
+            if status != SGP4ErrorCode.NONE.value:
+                raise PySAALError
+            self.key = key
+            self.loaded = True
 
-    def get_state_at_epoch(self, epoch: Epoch) -> tuple[CartesianElements, LLA]:
+    def get_state_at_epoch(self, epoch: Epoch) -> PropagatedTLE:
         if not self.loaded:
             self.load()
         pos, vel = CartesianElements.get_null_pointers()
         llh = LLA.get_null_pointer()
-        DLLs.sgp4_prop.Sgp4PropDs50UTC(self.key, epoch.utc_ds50, c_double(), pos, vel, llh)
-        return CartesianElements.from_c_arrays(pos, vel), LLA.from_c_array(llh)
+        error = DLLs.sgp4_prop.Sgp4PropDs50UTC(self.key, epoch.utc_ds50, c_double(), pos, vel, llh)
+        if error:
+            raise PySAALError
+        xa_sgp4_out = PropagatedTLE.null_pointer()
+        error = DLLs.sgp4_prop.Sgp4PropAll(self.key, SGP4EpochType.UTC.value, epoch.utc_ds50, xa_sgp4_out)
+        if error:
+            raise PySAALError
+        return PropagatedTLE.from_c_array(xa_sgp4_out)
 
-    def get_ephemeris(self, start: Epoch, end: Epoch, step: int) -> Ephemeris:
-        xa_tle = self.c_double_array
-        c_start = c_double(start.utc_ds50)
-        c_end = c_double(end.utc_ds50)
-        c_step = c_double(step)
-        num_pts = int(TimeSpan(start, end).minutes / step) + 1
-        ephem_arr = Ephemeris.null_pointer(num_pts)
-        num_generated = c_int()
-        status = DLLs.sgp4_prop.Sgp4GenEphems_OS(xa_tle, c_start, c_end, c_step, 1, num_pts, ephem_arr, num_generated)
-        if status != PySAALError.SUCCESS_CODE:
-            raise PySAALError(PySAALErrorCode(status))
-        return Ephemeris(ephem_arr)
+    @staticmethod
+    def get_loaded_keys() -> Array[c_longlong]:
+        keys = (c_longlong * TLE.get_number_in_memory())()
+        DLLs.tle.TleGetLoaded(9, keys)
+        return keys
 
     @property
     def classification(self) -> Classification:

@@ -86,6 +86,50 @@ def test_second():
     assert epoch.second == pytest.approx(1.2)
 
 
+def test_subtract():
+    epoch = Epoch(25934.0)
+    new_epoch = epoch - 1
+    assert new_epoch.utc_ds50 == 25933.0
+
+
+def test_greater_than():
+    epoch = Epoch(25934.0)
+    new_epoch = epoch + 1
+    assert new_epoch > epoch
+
+
+def test_less_than():
+    epoch = Epoch(25934.0)
+    new_epoch = epoch - 1
+    assert new_epoch < epoch
+
+
+def test_greater_than_or_equal():
+    epoch = Epoch(25934.0)
+    new_epoch = epoch + 1
+    assert new_epoch >= epoch
+    assert epoch >= epoch
+
+
+def test_less_than_or_equal():
+    epoch = Epoch(25934.0)
+    new_epoch = epoch - 1
+    assert new_epoch <= epoch
+    assert epoch <= epoch
+
+
+def test_equal():
+    epoch = Epoch(25934.0)
+    new_epoch = Epoch(25934.0)
+    assert new_epoch == epoch
+
+
+def test_not_equal():
+    epoch = Epoch(25934.0)
+    new_epoch = epoch + 1
+    assert new_epoch != epoch
+
+
 def test_day_of_year():
     epoch = Epoch.from_components(2021, 2, 1, 0, 0, 0.0)
     assert epoch.day_of_year == 32
