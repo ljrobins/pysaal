@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [{ name = "bsexton", email = "bsexton@icr-team.com" }]
-dependencies = ["numpy", "pandas"]
+dependencies = ["numpy", "pandas", "scipy"]
 
 [project.optional-dependencies]
 dev = [

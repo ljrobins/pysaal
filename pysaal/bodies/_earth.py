@@ -1,5 +1,3 @@
-from ctypes import c_int
-
 from pysaal.lib import DLLs
 from pysaal.lib._env_const import (
     XF_GEOCON_FF,
@@ -16,7 +14,7 @@ from pysaal.lib._env_const import (
 class Earth:
     @staticmethod
     def get_constant(geocon: int) -> float:
-        return DLLs.env_const.EnvGetGeoConst(c_int(geocon))
+        return DLLs.env_const.EnvGetGeoConst(geocon)
 
     @staticmethod
     def get_flattening() -> float:

@@ -95,12 +95,16 @@ class TLE:
         return DLLs.tle.TleGetCount()
 
     @property
+    def state(self) -> PropagatedTLE:
+        return self.get_state_at_epoch(self.epoch)
+
+    @property
     def cartesian_elements(self) -> CartesianElements:
-        return self.get_state_at_epoch(Epoch(self.epoch.utc_ds50)).cartesian_elements
+        return self.state.cartesian_elements
 
     @property
     def lla(self) -> LLA:
-        return self.get_state_at_epoch(Epoch(self.epoch.utc_ds50)).lla
+        return self.state.lla
 
     @property
     def position(self) -> Vector3D:

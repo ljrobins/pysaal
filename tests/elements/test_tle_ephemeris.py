@@ -3,6 +3,7 @@ from pysaal.elements import TLEEphemeris
 
 def test_from_tle(expected_tle):
     ephem = TLEEphemeris.from_tle(expected_tle, expected_tle.epoch, expected_tle.epoch + 1, 60)
+
     assert ephem[0].numpy_array.shape == (27,)
     assert ephem.numpy_array.shape == (1441, 27)
     assert len(ephem) == 1441
