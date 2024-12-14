@@ -1,4 +1,4 @@
-from ctypes import c_int, create_string_buffer
+from ctypes import Array, c_char, c_int, create_string_buffer
 from pathlib import Path
 
 from pysaal.lib._astro_func import get_astro_func_dll
@@ -30,6 +30,10 @@ class DLLs:
     sp_vec = get_sp_vec_dll()
     ext_ephem = get_ext_ephem_dll()
     el_ops = get_el_ops_dll()
+
+    @staticmethod
+    def get_null_string() -> Array[c_char]:
+        return create_string_buffer(DLLs.GET_SET_STRING_LENGTH + 1)
 
     @staticmethod
     def get_last_error_message() -> str:

@@ -1,3 +1,4 @@
+from pysaal.enums import EarthModel
 from pysaal.lib import DLLs
 from pysaal.lib._env_const import (
     XF_GEOCON_FF,
@@ -12,6 +13,16 @@ from pysaal.lib._env_const import (
 
 
 class Earth:
+    @staticmethod
+    def set_model(model: EarthModel) -> None:
+        DLLs.env_const.EnvSetGeoStr(model.value.encode())
+
+    @staticmethod
+    def get_model() -> EarthModel:
+        mod = DLLs.get_null_string()
+        DLLs.env_const.EnvGetGeoStr(mod)
+        return EarthModel(mod.value.decode())
+
     @staticmethod
     def get_constant(geocon: int) -> float:
         return DLLs.env_const.EnvGetGeoConst(geocon)
