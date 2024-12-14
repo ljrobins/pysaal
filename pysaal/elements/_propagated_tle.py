@@ -1,8 +1,5 @@
 from ctypes import Array, c_double
 
-import numpy as np
-import pandas as pd
-
 from pysaal.elements._cartesian_elements import CartesianElements
 from pysaal.elements._keplerian_elements import KeplerianElements
 from pysaal.elements._lla import LLA
@@ -103,75 +100,6 @@ class PropagatedTLE:
     @property
     def argument_of_perigee(self) -> float:
         return self.osculating_elements.argument_of_perigee
-
-    @property
-    def numpy_array(self) -> np.ndarray:
-        return np.array(
-            [
-                self.epoch.datetime,
-                self.minutes_since_epoch,
-                self.cartesian_elements.position.magnitude,
-                self.cartesian_elements.position.x,
-                self.cartesian_elements.position.y,
-                self.cartesian_elements.position.z,
-                self.cartesian_elements.velocity.magnitude,
-                self.cartesian_elements.velocity.x,
-                self.cartesian_elements.velocity.y,
-                self.cartesian_elements.velocity.z,
-                self.lla.latitude,
-                self.lla.longitude,
-                self.lla.altitude,
-                self.revolution_number,
-                self.nodal_period,
-                self.mean_elements.semi_major_axis,
-                self.mean_elements.eccentricity,
-                self.mean_elements.inclination,
-                self.mean_elements.mean_anomaly,
-                self.mean_elements.raan,
-                self.mean_elements.argument_of_perigee,
-                self.osculating_elements.semi_major_axis,
-                self.osculating_elements.eccentricity,
-                self.osculating_elements.inclination,
-                self.osculating_elements.mean_anomaly,
-                self.osculating_elements.raan,
-                self.osculating_elements.argument_of_perigee,
-            ]
-        )
-
-    @property
-    def dataframe(self) -> pd.DataFrame:
-        return pd.DataFrame(
-            [self.numpy_array],
-            columns=[
-                "epoch",
-                "min_since_epoch",
-                "radius",
-                "teme_x_pos",
-                "teme_y_pos",
-                "teme_z_pos",
-                "velocity",
-                "teme_x_vel",
-                "teme_y_vel",
-                "teme_z_vel",
-                "latitude",
-                "longitude",
-                "altitude",
-                "rev_no",
-                "nodal_period",
-                "mean_a",
-                "mean_e",
-                "mean_i",
-                "mean_ma",
-                "mean_raan",
-                "mean_arg_perigee",
-                "osc_a",
-                "osc_e",
-                "osc_i",
-                "osc_ma",
-                "osc_raan",
-                "osc_arg_perigee",
-            ],
-        )
 
     @staticmethod
     def null_pointer() -> Array[c_double]:
