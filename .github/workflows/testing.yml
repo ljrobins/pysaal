@@ -45,7 +45,7 @@ jobs:
           pip install .
           pip install ".[test]"
       - name: run all unittests
-        run: pip install . && pytest .
+        run: pytest .
 
   test-macos:
     runs-on: macos-latest

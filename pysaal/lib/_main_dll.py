@@ -2,7 +2,7 @@
 import os
 import platform
 import sys
-from ctypes import CDLL, POINTER, c_char, c_char_p, c_double, c_int, c_longlong, c_void_p
+from ctypes import CDLL, POINTER, RTLD_GLOBAL, c_char, c_char_p, c_double, c_int, c_longlong, c_void_p
 from pathlib import Path
 
 c_int_p = POINTER(c_int)
@@ -32,6 +32,7 @@ if platform.uname()[0] == "Windows":
             print("Error: Could not find Astro Standards libraries in PATH")
 
 if platform.uname()[0] == "Linux":
+    CDLL(None).dlopen(LIB_PATH.as_posix().encode("utf-8"), RTLD_GLOBAL)
     DLL_NAME = LIB_PATH / "libdllmain.so"
 
 if platform.uname()[0] == "Darwin":
