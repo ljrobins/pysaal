@@ -72,16 +72,3 @@ class DLLs:
     @staticmethod
     def allow_duplicate_keys(allow: bool) -> None:
         DLLs.main.SetAllKeyMode(c_int(allow))
-
-
-# ensure dlls are loaded
-DLLs.main
-DLLs.env_const
-DLLs.time_func
-DLLs.astro_func
-DLLs.tle
-DLLs.sgp4_prop
-DLLs.vcm
-DLLs.sp_vec
-DLLs.ext_ephem
-DLLs.el_ops

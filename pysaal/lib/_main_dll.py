@@ -49,6 +49,7 @@ def get_main_dll():
     # load the dll
     if DLL_NAME.exists():
         dllObj = CDLL(DLL_NAME.as_posix())
+        raise ValueError("Caught DLL found")
     else:
         raise FileNotFoundError(f"{DLL_NAME} not found")
 
