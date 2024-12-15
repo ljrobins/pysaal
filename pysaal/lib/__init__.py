@@ -1,13 +1,7 @@
 from pathlib import Path
 from ctypes import c_double, c_int
 
-try:
-    from pysaal.lib._dlls import DLLs
-except OSError:
-    from pysaal.lib._install_utilities import install_linux_library
-
-    install_linux_library()
-    from pysaal.lib._dlls import DLLs
+from pysaal.lib._dlls import DLLs
 
 # Generate the SGP4 license file if it does not exist.
 SGP4_LICENSE_PATH = Path.cwd() / "SGP4_Open_License.txt"

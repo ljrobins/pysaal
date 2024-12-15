@@ -10,7 +10,7 @@ c_longlong_p = POINTER(c_longlong)
 c_double_p = POINTER(c_double)
 
 LIB_PATH = Path(__file__).parent
-sys.path.append(LIB_PATH.as_posix())
+
 # get the right filename of the dll/so
 if platform.uname()[0] == "Windows":
     DLL_NAME = LIB_PATH / "DllMain.dll"
@@ -32,6 +32,9 @@ if platform.uname()[0] == "Windows":
             print("Error: Could not find Astro Standards libraries in PATH")
 
 if platform.uname()[0] == "Linux":
+    current_ld_path = os.environ.get("LD_LIBRARY_PATH", "")
+    if LIB_PATH.as_posix() not in current_ld_path:
+        raise OSError(f"Please add {LIB_PATH} to your LD_LIBRARY_PATH")
     DLL_NAME = LIB_PATH / "libdllmain.so"
 
 if platform.uname()[0] == "Darwin":
