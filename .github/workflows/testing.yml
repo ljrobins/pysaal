@@ -44,9 +44,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
           pip install ".[test]"
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/runner/work/pysaal/pysaal/pysaal/lib
       - name: run all unittests
-        run: pytest .
+        run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/runner/work/pysaal/pysaal/pysaal/lib
+          pytest .
 
   test-macos:
     runs-on: macos-latest
