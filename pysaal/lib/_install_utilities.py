@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from shutil import copyfile
 
@@ -11,3 +12,4 @@ def install_linux_library():
     for file in all_files:
         if ".py" not in file.suffix and ".dylib" not in file.suffix and ".DLL" not in file.suffix:
             copyfile(file, usr_ld_library_path / file.name)
+            os.chmod(usr_ld_library_path / file.name, 0o755)
