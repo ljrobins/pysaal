@@ -5,6 +5,7 @@ from pysaal.lib._astro_func import XA_EQNX_AF, XA_EQNX_AG, XA_EQNX_CHI, XA_EQNX_
 
 class EquinoctialElements:
     def __init__(self, af: float, ag: float, chi: float, psi: float, l: float, n: float):
+
         self.af = af
         self.ag = ag
         self.chi = chi

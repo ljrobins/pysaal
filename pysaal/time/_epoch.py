@@ -5,7 +5,15 @@ from pysaal.lib import DLLs
 
 
 class Epoch:
+    """Class used to represent an epoch in DS50 format for use with the SAAL library"""
+
     def __init__(self, epoch: float):
+        """Basic constructor
+
+        :param epoch: The epoch in DS50 format
+        """
+
+        #: The epoch in UTC days since 1950
         self.utc_ds50 = epoch
 
     def __add__(self, other: float) -> "Epoch":

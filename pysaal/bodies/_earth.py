@@ -15,46 +15,66 @@ from pysaal.lib._env_const import (
 class Earth:
     @staticmethod
     def set_model(model: EarthModel) -> None:
+        """Update the global geodetic model used in the environment constants.
+
+        :param model: The new geodetic model to use.  See :ref:`earth_model` for options.
+        """
         DLLs.env_const.EnvSetGeoStr(model.value.encode())
 
     @staticmethod
     def get_model() -> EarthModel:
+        """Get the global geodetic model used in the environment constants."""
         mod = DLLs.get_null_string()
         DLLs.env_const.EnvGetGeoStr(mod)
         return EarthModel(mod.value.decode())
 
     @staticmethod
-    def get_constant(geocon: int) -> float:
+    def _get_constant(geocon: int) -> float:
+        """Get an environment constant by index.
+
+        .. note::
+
+            This method is not intended to be used directly.  Instead, most constants have been exposed as methods.
+        """
+
         return DLLs.env_const.EnvGetGeoConst(geocon)
 
     @staticmethod
     def get_flattening() -> float:
-        return Earth.get_constant(XF_GEOCON_FF)
+        """Get the flattening factor of the Earth."""
+        return Earth._get_constant(XF_GEOCON_FF)
 
     @staticmethod
     def get_j2() -> float:
-        return Earth.get_constant(XF_GEOCON_J2)
+        """Get the J2 coefficient of the Earth. (unitless)"""
+        return Earth._get_constant(XF_GEOCON_J2)
 
     @staticmethod
     def get_j3() -> float:
-        return Earth.get_constant(XF_GEOCON_J3)
+        """Get the J3 coefficient of the Earth. (unitless)"""
+        return Earth._get_constant(XF_GEOCON_J3)
 
     @staticmethod
     def get_j4() -> float:
-        return Earth.get_constant(XF_GEOCON_J4)
+        """Get the J4 coefficient of the Earth. (unitless)"""
+        return Earth._get_constant(XF_GEOCON_J4)
 
     @staticmethod
     def get_j5() -> float:
-        return Earth.get_constant(XF_GEOCON_J5)
+        """Get the J5 coefficient of the Earth. (unitless)"""
+        return Earth._get_constant(XF_GEOCON_J5)
 
     @staticmethod
     def get_radius() -> float:
-        return Earth.get_constant(XF_GEOCON_KMPER)
+        """Get the equatorial radius of the Earth. :math:`(km)`"""
+        return Earth._get_constant(XF_GEOCON_KMPER)
 
     @staticmethod
     def get_rotation_rate() -> float:
-        return Earth.get_constant(XF_GEOCON_RPTIM)
+        r"""Get the rotation rate of the Earth. :math:`\frac{rad}{min}`"""
+        return Earth._get_constant(XF_GEOCON_RPTIM)
 
     @staticmethod
     def get_mu() -> float:
-        return Earth.get_constant(XF_GEOCON_MU)
+        r"""Get the gravitational parameter of the Earth. :math:`\frac{km^3}{s^2}`"""
+        return Earth._get_constant(XF_GEOCON_MU)

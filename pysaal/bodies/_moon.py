@@ -7,10 +7,15 @@ from pysaal.time import Epoch
 
 class Moon:
 
-    MU = 4902.800066
+    #: The gravitational parameter of the Moon in :math:`\frac{km^3}{s^2}`.
+    MU = 4902.800305555
 
     @staticmethod
     def get_analytic_position(epoch: Epoch) -> Vector3D:
+        """Get the position of the Moon using an analytic model. :math:`(km)`
+
+        :param epoch: The epoch at which to calculate the position.
+        """
         u_vec = Vector3D.get_null_pointer()
         vec_mag = c_double()
         DLLs.astro_func.CompMoonPos(epoch.tt_ds50, u_vec, vec_mag)
@@ -18,6 +23,10 @@ class Moon:
 
     @staticmethod
     def get_jpl_position(epoch: Epoch) -> Vector3D:
+        """Get the position of the Moon using the JPL ephemeris. :math:`(km)`
+
+        :param epoch: The epoch at which to calculate the position.
+        """
         _ = Vector3D.get_null_pointer()
         moon_vec = Vector3D.get_null_pointer()
         DLLs.astro_func.JplCompSunMoonPos(epoch.tt_ds50, _, moon_vec)

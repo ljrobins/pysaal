@@ -7,7 +7,7 @@ from pysaal.math.constants import MINUTES_IN_DAY, MINUTUES_TO_DAYS
 
 
 def test_equinoctial_from_keplerian(expected_keplerian, expected_equinoctial):
-    eqnx = ConvertElements.equinoctial.from_equinoctial(expected_keplerian)
+    eqnx = ConvertElements.equinoctial.from_keplerian(expected_keplerian)
     assert eqnx.af == pytest.approx(expected_equinoctial.af)
     assert eqnx.ag == pytest.approx(expected_equinoctial.ag)
     assert eqnx.chi == pytest.approx(expected_equinoctial.chi)
