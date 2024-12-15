@@ -220,7 +220,7 @@ class TLE:
         """Load the TLE into memory"""
         if not self.loaded:
             key = DLLs.tle.TleAddSatFrArray(self.c_double_array, self.c_char_array)
-            if key in PySAALKeyErrorCode:
+            if key == PySAALKeyErrorCode.BAD_KEY.value or key == PySAALKeyErrorCode.DUPLICATE_KEY.value:
                 raise PySAALError
             status = DLLs.sgp4_prop.Sgp4InitSat(key)
             if status != SGP4ErrorCode.NONE.value:
