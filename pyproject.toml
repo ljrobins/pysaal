@@ -23,6 +23,9 @@ build = ["build"]
 docs = ["sphinx", "sphinx-autodoc-typehints", "sphinx-markdown-builder"]
 deploy = ["twine"]
 
+[project.scripts]
+pysaal-linux-install = "pysaal.lib._install_utilities:install_linux_library"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
