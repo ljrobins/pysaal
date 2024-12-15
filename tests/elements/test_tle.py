@@ -25,15 +25,15 @@ def test_update(expected_tle):
     state = expected_tle.get_state_at_epoch(expected_tle.epoch)
     expected_tle.destroy()
     assert expected_tle.inclination == 42
-    assert state.position.x == 5907.241830363182
-    assert state.position.y == -1812.0856674529778
-    assert state.position.z == 2828.6276707425336
-    assert state.velocity.x == 3.765882542507204
-    assert state.velocity.y == 4.312300334009153
-    assert state.velocity.z == -5.088378313453208
-    assert state.longitude == 270.1158920066335
-    assert state.latitude == 24.734533628750928
-    assert state.altitude == 421.19273186284363
+    assert state.position.x == pytest.approx(5907.241830363182)
+    assert state.position.y == pytest.approx(-1812.0856674529778)
+    assert state.position.z == pytest.approx(2828.6276707425336)
+    assert state.velocity.x == pytest.approx(3.765882542507204)
+    assert state.velocity.y == pytest.approx(4.312300334009153)
+    assert state.velocity.z == pytest.approx(-5.088378313453208)
+    assert state.longitude == pytest.approx(270.1158920066335)
+    assert state.latitude == pytest.approx(24.734533628750928)
+    assert state.altitude == pytest.approx(421.19273186284363)
 
 
 def test_propagate_to_epoch(expected_tle):
@@ -41,15 +41,15 @@ def test_propagate_to_epoch(expected_tle):
     state = expected_tle.get_state_at_epoch(expected_tle.epoch + 1)
     expected_tle.destroy()
 
-    assert state.position.x == -6000.683061334345
-    assert state.position.y == 2024.4258851255618
-    assert state.position.z == -2456.1499345834163
-    assert state.velocity.x == -3.588289406024903
-    assert state.velocity.y == -4.171760521251378
-    assert state.velocity.z == 5.333708710662431
-    assert state.longitude == 87.54134638131
-    assert state.latitude == -21.32009251115934
-    assert state.altitude == 417.25424345521776
+    assert state.position.x == pytest.approx(-6000.683061334345)
+    assert state.position.y == pytest.approx(2024.4258851255618)
+    assert state.position.z == pytest.approx(-2456.1499345834163)
+    assert state.velocity.x == pytest.approx(-3.588289406024903)
+    assert state.velocity.y == pytest.approx(-4.171760521251378)
+    assert state.velocity.z == pytest.approx(5.333708710662431)
+    assert state.longitude == pytest.approx(87.54134638131)
+    assert state.latitude == pytest.approx(-21.32009251115934)
+    assert state.altitude == pytest.approx(417.25424345521776)
 
 
 def test_get_loaded_keys(expected_tle):
