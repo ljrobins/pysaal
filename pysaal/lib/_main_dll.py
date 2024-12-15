@@ -2,7 +2,7 @@
 import os
 import platform
 import sys
-from ctypes import CDLL, POINTER, RTLD_GLOBAL, c_char, c_char_p, c_double, c_int, c_longlong, c_void_p
+from ctypes import CDLL, POINTER, c_char, c_char_p, c_double, c_int, c_longlong, c_void_p
 from pathlib import Path
 
 c_int_p = POINTER(c_int)
@@ -10,6 +10,7 @@ c_longlong_p = POINTER(c_longlong)
 c_double_p = POINTER(c_double)
 
 LIB_PATH = Path(__file__).parent
+sys.path.append(LIB_PATH.as_posix())
 # get the right filename of the dll/so
 if platform.uname()[0] == "Windows":
     DLL_NAME = LIB_PATH / "DllMain.dll"
@@ -47,7 +48,7 @@ def get_main_dll():
 
     # load the dll
     if DLL_NAME.exists():
-        dllObj = CDLL(DLL_NAME.as_posix(), mode=RTLD_GLOBAL)
+        dllObj = CDLL(DLL_NAME.as_posix())
     else:
         raise FileNotFoundError(f"{DLL_NAME} not found")
 

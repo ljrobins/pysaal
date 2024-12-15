@@ -1,6 +1,6 @@
 # This wrapper file was generated automatically by the GenDllWrappers program.
 import platform
-from ctypes import CDLL, RTLD_GLOBAL, c_char_p, c_double, c_int, c_longlong
+from ctypes import CDLL, c_char_p, c_double, c_int, c_longlong
 from pathlib import Path
 
 LIB_PATH = Path(__file__).parent
@@ -26,7 +26,7 @@ def get_env_const_dll():
 
     # load the dll
     if DLL_NAME.exists():
-        dllObj = CDLL(DLL_NAME.as_posix(), mode=RTLD_GLOBAL)
+        dllObj = CDLL(DLL_NAME.as_posix())
     else:
         raise FileNotFoundError(f"{DLL_NAME} not found")
 
