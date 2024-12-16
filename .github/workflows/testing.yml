@@ -27,7 +27,7 @@ jobs:
         run: pytest .
 
   test-linux:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -47,6 +47,7 @@ jobs:
       - name: run all unittests
         run: |
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/runner/work/pysaal/pysaal/pysaal/lib
+          ldd --version
           pytest .
 
   test-macos:
