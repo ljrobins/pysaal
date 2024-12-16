@@ -46,6 +46,7 @@ jobs:
           pip install ".[test]"
       - name: run all unittests
         run: |
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/runner/work/pysaal/pysaal/pysaal/lib
           pytest .
 
   test-macos:
