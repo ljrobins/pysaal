@@ -19,6 +19,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx_autodoc_typehints",
     "sphinx_markdown_builder",
+    "sphinx.ext.githubpages",
 ]
 
 
