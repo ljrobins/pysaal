@@ -30,6 +30,7 @@ jobs:
           make html
           cd ../
           mv ./docs/build/html/ ../docs/
+          cp ./docs/.nojekyll ../docs/
           git rm -rf '*'
           cp -r ../docs/ ./
       - name: deploy
