@@ -25,6 +25,7 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_extra_path = ["SGP4_Open_License.txt"]
+html_baseurl = "https://know-space.github.io/pysaal/"
 
 
 # -- Options for HTML output -------------------------------------------------
