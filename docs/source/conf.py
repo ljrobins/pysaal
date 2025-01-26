@@ -1,11 +1,11 @@
 import sys
-from pathlib import Path
 from datetime import date
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 project = "PySAAL"
-copyright = f"2024-{date.today().year}, Brandon Sexton"
+copyright = f"2024-{date.today().year}, KnowSpace"
 author = "Brandon Sexton"
 release = "0.1.0"
 
@@ -54,12 +54,12 @@ todo_include_todos = True
 
 # Gallery options
 sphinx_gallery_conf = {
-    'gallery_dirs': ['gallery'],
-    'examples_dirs': ['../../examples'],
-    'filename_pattern': '/*.py',
-    'download_all_examples': False,
-    'image_scrapers': ['matplotlib'],
-    'matplotlib_animations': True,
-    'thumbnail_size': (333, 250),
-    'image_srcset': ['2x'],
+    "gallery_dirs": ["gallery"],
+    "examples_dirs": ["../../examples"],
+    "filename_pattern": "/*.py",
+    "download_all_examples": False,
+    "image_scrapers": ["matplotlib"],
+    "matplotlib_animations": True,
+    "thumbnail_size": (333, 250),
+    "image_srcset": ["2x"],
 }
